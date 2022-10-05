@@ -1,25 +1,42 @@
-import logo from './logo.svg';
-import './App.css';
+import { graphql } from "@octokit/graphql";
+import { useEffect, useState } from "react";
 
-function App() {
+const App = () => {
+  const [item, setItem] = useState("");
+  useEffect(() => {
+    graphql(
+      `
+        {
+          repository(name: "agora-states-fe", owner: "codestates-seb") {
+            discussions(first: 10) {
+              edges {
+                node {
+                  title
+                  createdAt
+                }
+              }
+            }
+          }
+        }
+      `,
+      {
+        headers: {
+          authorization: "token " + process.env.REACT_APP_GRAPHQL_TOKEN,
+        },
+      }
+    ).then((data) => setItem(data.repository.discussions.edges));
+  }, []);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {item &&
+        item.map((element, id) => (
+          <h1 key={id}>
+            {element.node.title}/{element.node.createdAt.toString().slice(0, 10)}
+          </h1>
+        ))}
     </div>
   );
-}
+};
 
 export default App;
